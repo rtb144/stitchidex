@@ -9,15 +9,28 @@ Works with Brother, Baby Lock, Janome, Husqvarna Viking, Pfaff, Bernina and more
 
 ## ⬇️ Download
 
+> ### 🧪 Public Beta Download — Stitchidex `v0.5.1-beta` (Tester Feedback Release)
+> **Beta until tester feedback is confirmed.** New: Dropbox/OneDrive cloud-safe scanning + Cancel Scan, built-in **100% offline Help & Wiki viewer**, `.EMB` (Hatch) source-file badge + "Stitch-Out Files Only" filter, selection checkboxes, double-click / Open in Default App, Table View horizontal scroll, layout fixes.
+>
+> | | |
+> |---|---|
+> | 🪟 **Windows 10/11 64-bit Installer** | [**Stitchidex-Setup-0.5.1-win64.exe**](https://github.com/rtb144/stitchidex/releases/download/v0.5.1-beta/Stitchidex-Setup-0.5.1-win64.exe) (same as [StichidexDotNet-Setup-0.5.1-win64.exe](https://github.com/rtb144/stitchidex/releases/download/v0.5.1-beta/StichidexDotNet-Setup-0.5.1-win64.exe)) |
+> | 📦 **Windows 10/11 64-bit Portable** | [**Stitchidex-0.5.1-win64-portable.zip**](https://github.com/rtb144/stitchidex/releases/download/v0.5.1-beta/Stitchidex-0.5.1-win64-portable.zip) |
+> | 🐧 **Linux Debian/Ubuntu 64-bit** | [stichidexdotnet_0.5.1_amd64.deb](https://github.com/rtb144/stitchidex/releases/download/v0.5.1-beta/stichidexdotnet_0.5.1_amd64.deb) |
+> | 🖨️ **Standalone User Guide** | [Stitchidex-Windows-User-Guide.html](https://github.com/rtb144/stitchidex/releases/download/v0.5.1-beta/Stitchidex-Windows-User-Guide.html) |
+> | 🏷️ **Release page** | [v0.5.1-beta](https://github.com/rtb144/stitchidex/releases/tag/v0.5.1-beta) |
+
+### ✅ Stable — Stitchidex `v0.5.0`
+
 | | |
 |---|---|
-| 🪟 **Windows 10 / 11 Installer** (recommended) | [**Stitchidex-Setup-0.5.0-win64.exe**](https://github.com/rtb144/stitchidex/releases/latest/download/Stitchidex-Setup-0.5.0-win64.exe) |
-| 📦 Windows portable (no install, unzip and run) | [Stitchidex-0.5.0-win64-portable.zip](https://github.com/rtb144/stitchidex/releases/latest/download/Stitchidex-0.5.0-win64-portable.zip) |
-| 🐧 Linux (Debian/Ubuntu) | [stichidexdotnet_0.5.0_amd64.deb](https://github.com/rtb144/stitchidex/releases/latest/download/stichidexdotnet_0.5.0_amd64.deb) |
-| 🖨️ Printable large-print User Guide | [Stitchidex-Windows-User-Guide.html](https://github.com/rtb144/stitchidex/releases/latest/download/Stitchidex-Windows-User-Guide.html) |
+| 🪟 **Windows 10 / 11 Installer** (recommended) | [**Stitchidex-Setup-0.5.0-win64.exe**](https://github.com/rtb144/stitchidex/releases/download/v0.5.0/Stitchidex-Setup-0.5.0-win64.exe) |
+| 📦 Windows portable (no install, unzip and run) | [Stitchidex-0.5.0-win64-portable.zip](https://github.com/rtb144/stitchidex/releases/download/v0.5.0/Stitchidex-0.5.0-win64-portable.zip) |
+| 🐧 Linux (Debian/Ubuntu) | [stichidexdotnet_0.5.0_amd64.deb](https://github.com/rtb144/stitchidex/releases/download/v0.5.0/stichidexdotnet_0.5.0_amd64.deb) |
+| 🖨️ Printable large-print User Guide | [Stitchidex-Windows-User-Guide.html](https://github.com/rtb144/stitchidex/releases/download/v0.5.0/Stitchidex-Windows-User-Guide.html) |
 | 📚 Help Wiki | [Stitchidex Wiki](https://github.com/rtb144/stitchidex/wiki) · [wiki/ folder](wiki/Home.md) |
 
-All downloads: [Releases page](https://github.com/rtb144/stitchidex/releases/latest)
+All downloads: [Releases page](https://github.com/rtb144/stitchidex/releases) (stable: [v0.5.0](https://github.com/rtb144/stitchidex/releases/tag/v0.5.0) · beta: [v0.5.1-beta](https://github.com/rtb144/stitchidex/releases/tag/v0.5.1-beta))
 
 ## 📸 Visual Tour
 
