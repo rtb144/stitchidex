@@ -1,5 +1,5 @@
 # Builds a self-contained win-x64 StichidexDotNet and an Inno Setup installer (side-by-side with Python Stitchidex).
-param([string]$Version = "0.5.0", [string]$Iscc = "")
+param([string]$Version = "0.5.1", [string]$Iscc = "")
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 $out = Join-Path $root "artifacts\win-x64"

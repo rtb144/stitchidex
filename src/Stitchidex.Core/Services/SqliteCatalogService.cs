@@ -150,8 +150,32 @@ public sealed class SqliteCatalogService : IDisposable
         return !SkipExts.Contains(ext) && EmbroideryParserRegistry.IsEmbroideryExtension(ext);
     }
 
-    static EmbroideryPattern? ParseAndRender(string f, bool render)
+    /// <summary>Cloud-Safe Mode (default): Dropbox/OneDrive online-only placeholders are cataloged from filename + FileInfo only,
+    /// never opened, so a scan can't trigger a mass download. Set false only when the user opts in to hydration.</summary>
+    public bool SkipCloudPlaceholders { get; set; } = true;
+    int _cloudSkipped;
+    /// <summary>Number of cloud-only placeholders cataloged without reading bytes during the last scan.</summary>
+    public int CloudPlaceholdersSkipped => _cloudSkipped;
+
+    bool IsCloudOnly(string f) => SkipCloudPlaceholders && CloudPlaceholderDetector.IsCloudPlaceholder(f);
+
+    /// <summary>Metadata-only entry for an unhydrated cloud file (no stream is ever opened).</summary>
+    public static EmbroideryPattern CloudPlaceholderPattern(string f)
     {
+        var ext = System.IO.Path.GetExtension(f).ToLowerInvariant();
+        var p = new EmbroideryPattern
+        {
+            Title = Regex.Replace(System.IO.Path.GetFileNameWithoutExtension(f), @"[_\-\.]+", " ").Trim() is { Length: > 0 } t ? t : "Untitled",
+            FilePath = f,
+            FormatFamily = EmbroideryParserRegistry.FormatFamilyMap.TryGetValue(ext, out var fam) ? fam : ext,
+            HoopCategory = CloudPlaceholderDetector.CloudOnlyBadge,
+        };
+        return p;
+    }
+
+    EmbroideryPattern? ParseAndRender(string f, bool render)
+    {
+        if (IsCloudOnly(f)) { Interlocked.Increment(ref _cloudSkipped); return CloudPlaceholderPattern(f); }
         try
         {
             var p = EmbroideryParserRegistry.ParseFile(f);
@@ -174,7 +198,9 @@ public sealed class SqliteCatalogService : IDisposable
     public Task<int> ScanDirectoryAsync(string folder, IProgress<(int Done, int Total, string FileName)>? progress = null,
         CancellationToken ct = default, bool renderThumbnails = true) => Task.Run(() =>
     {
-        var files = Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories).Where(IsPatternFile).ToList();
+        _cloudSkipped = 0;
+        var files = Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories)
+            .Where(f => { ct.ThrowIfCancellationRequested(); return IsPatternFile(f); }).ToList();
         return IndexFiles(files, progress, ct, renderThumbnails);
     }, ct);
 
@@ -207,7 +233,7 @@ public sealed class SqliteCatalogService : IDisposable
         Task.Run(() =>
         {
             var files = Query("SELECT " + Cols + " FROM patterns WHERE palette IS NULL OR ((thumbnail IS NULL OR length(thumbnail)=0) AND stitch_count > 0)")
-                .Select(e => e.Path).Where(File.Exists).ToList();
+                .Select(e => e.Path).Where(p => File.Exists(p) && !IsCloudOnly(p)).ToList();
             return files.Count == 0 ? 0 : IndexFiles(files, progress, ct, true);
         }, ct);
 
@@ -227,7 +253,7 @@ public sealed class SqliteCatalogService : IDisposable
         ("$pl", JsonSerializer.Serialize(p.Colors.Select(c => c.Hex).ToList())), ("$j", p.JumpCount), ("$tr", p.TrimCount));
         var vol = UsbDriveService.InspectPathVolume(full);
         byte[]? blob = null;
-        if (vol.IsRemovable)
+        if (vol.IsRemovable && !IsCloudOnly(full))
             try { if (new FileInfo(full).Length <= UsbDriveService.MaxCachedBytes) blob = UsbDriveService.ReadAllBytesShared(full); } catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { }
         Exec("UPDATE patterns SET is_removable=$r,volume_label=$vl,volume_serial=$vs,volume_rel_path=$vr,raw_blob=$b,has_cached_blob=$hb WHERE path=$p",
             ("$r", vol.IsRemovable ? 1 : 0), ("$vl", vol.VolumeLabel), ("$vs", vol.VolumeSerial), ("$vr", vol.VolumeRelativePath),
@@ -254,7 +280,7 @@ public sealed class SqliteCatalogService : IDisposable
         {
             foreach (var e in rows)
             {
-                var label = SearchText.ReadPecLabel(e.Path);
+                var label = IsCloudOnly(e.Path) ? null : SearchText.ReadPecLabel(e.Path);
                 var card = SearchText.BuildCard(e.Title, e.Path, label is null ? Array.Empty<string>() : new[] { label }, e.Tags, e.Notes);
                 Exec("UPDATE patterns SET semantic_card=$c WHERE id=$i", ("$c", card), ("$i", e.Id));
                 Exec("DELETE FROM embeddings WHERE pattern_id=$i", ("$i", e.Id));

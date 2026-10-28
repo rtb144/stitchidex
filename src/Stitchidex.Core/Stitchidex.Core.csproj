@@ -14,5 +14,10 @@
     <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="2.88.9" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Full offline Help & Wiki: every wiki page + the Windows User Guide compiled into the assembly -->
+    <EmbeddedResource Include="..\..\wiki\*.md" LogicalName="Stitchidex.Help.%(Filename).md" />
+    <EmbeddedResource Include="..\..\docs\*.md" LogicalName="Stitchidex.Help.%(Filename).md" />
+  </ItemGroup>
   <ItemGroup><InternalsVisibleTo Include="Stitchidex.Tests" /></ItemGroup>
 </Project>

@@ -1,56 +1,81 @@
 <Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        x:Class="Stitchidex.Desktop.Views.MainWindow" Title="Stitchidex 0.5.0 (.NET) — Craft Studio" Width="1480" Height="900" KeyDown="OnWindowKeyDown" Icon="avares://stichidexdotnet/Assets/stitchidex.ico"
+        x:Class="Stitchidex.Desktop.Views.MainWindow" Title="Stitchidex 0.5.1 (.NET) — Craft Studio" Width="1480" Height="900" MinWidth="1180" MinHeight="640" KeyDown="OnWindowKeyDown" Icon="avares://stichidexdotnet/Assets/stitchidex.ico"
         Foreground="{DynamicResource StudioText}">
   <DockPanel>
-    <!-- Top Studio Bar -->
+    <!-- Top Studio Bar: row 0 = controls, row 1 = dedicated scan/status row (never behind Theme / Smart Search) -->
     <Border DockPanel.Dock="Top" Padding="10,8" Background="{DynamicResource StudioPanel}" BorderThickness="0,0,0,1" BorderBrush="{DynamicResource StudioBorder}">
-      <Grid ColumnDefinitions="Auto,*,Auto">
-        <StackPanel Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-          <Image Source="avares://stichidexdotnet/Assets/stitchidex-icon.png" Width="28" Height="28" Margin="0,0,0,0" VerticalAlignment="Center"/>
+      <Grid x:Name="HeaderGrid" RowDefinitions="Auto,Auto" ColumnDefinitions="Auto,*,Auto,Auto">
+        <StackPanel Grid.Row="0" Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+          <Image Source="avares://stichidexdotnet/Assets/stitchidex-icon.png" Width="28" Height="28" VerticalAlignment="Center"/>
           <TextBlock Text="Stitchidex" VerticalAlignment="Center" FontWeight="Bold" FontSize="16" Margin="0,0,12,0"/>
           <TextBlock Text="Search:" VerticalAlignment="Center" FontWeight="SemiBold"/>
-          <StackPanel Spacing="4">
-            <TextBox Width="460" Watermark="Search patterns by title, subject, thread color, #PES version, or tag..." Text="{Binding SearchText}"/>
-            <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasSuggestions}">
-              <TextBlock Text="{Binding DidYouMean}" VerticalAlignment="Center" FontStyle="Italic" Opacity="0.8"/>
-              <ItemsControl ItemsSource="{Binding SearchSuggestions}">
-                <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
-                <ItemsControl.ItemTemplate><DataTemplate>
-                  <Button Content="{Binding}" CornerRadius="12" Padding="10,2" FontSize="12"
-                          Command="{Binding $parent[ItemsControl].DataContext.ApplySuggestionCommand}" CommandParameter="{Binding}"/>
-                </DataTemplate></ItemsControl.ItemTemplate>
-              </ItemsControl>
-            </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4" Margin="8,0" VerticalAlignment="Center">
+          <TextBox MinWidth="200" MaxWidth="520" HorizontalAlignment="Stretch" Watermark="Search patterns by title, subject, thread color, #PES version, or tag..." Text="{Binding SearchText}"/>
+          <StackPanel Orientation="Horizontal" Spacing="6" IsVisible="{Binding HasSuggestions}">
+            <TextBlock Text="{Binding DidYouMean}" VerticalAlignment="Center" FontStyle="Italic" Opacity="0.8"/>
+            <ItemsControl ItemsSource="{Binding SearchSuggestions}">
+              <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+              <ItemsControl.ItemTemplate><DataTemplate>
+                <Button Content="{Binding}" CornerRadius="12" Padding="10,2" FontSize="12"
+                        Command="{Binding $parent[ItemsControl].DataContext.ApplySuggestionCommand}" CommandParameter="{Binding}"/>
+              </DataTemplate></ItemsControl.ItemTemplate>
+            </ItemsControl>
           </StackPanel>
-          <ToggleButton IsChecked="{Binding SmartSearchEnabled}" Content="{Binding SmartSearchPill}" CornerRadius="14"/>
         </StackPanel>
-        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" Margin="16,0" VerticalAlignment="Center" IsVisible="{Binding IsScanning}">
-          <ProgressBar Width="220" Minimum="0" Maximum="100" Value="{Binding ScanProgress}" Foreground="{DynamicResource StudioAccent}"/>
-          <TextBlock Text="{Binding ScanStatusText}" Classes="muted" VerticalAlignment="Center" MaxWidth="320" TextTrimming="CharacterEllipsis"/>
-          <Button Content="✕ Cancel" Command="{Binding CancelScanCommand}" Padding="8,3" FontSize="11"/>
-        </StackPanel>
-        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8">
-          <Button Content="▦ Thumbnail Grid" Command="{Binding ShowGridCommand}"/>
-          <Button Content="☰ Table View" Command="{Binding ShowTableCommand}"/>
-          <TextBlock Text="Theme" VerticalAlignment="Center"/>
-          <ComboBox Width="190" ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedTheme}"/>
-        </StackPanel>
+        <ToggleButton Grid.Row="0" Grid.Column="2" x:Name="SmartSearchToggle" IsChecked="{Binding SmartSearchEnabled}" CornerRadius="14" VerticalAlignment="Center" Margin="0,0,8,0" MaxWidth="250"
+                      ToolTip.Tip="Smart Search finds designs by meaning (winter → snowflakes) and fixes typos. Turn OFF for exact keyword matching. Runs fully offline.">
+          <TextBlock Text="{Binding SmartSearchPill}" TextTrimming="CharacterEllipsis"/>
+        </ToggleButton>
+        <WrapPanel Grid.Row="0" Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button Margin="0,0,6,0" Content="▦ Thumbnail Grid" Command="{Binding ShowGridCommand}" ToolTip.Tip="Show designs as picture cards"/>
+          <Button Margin="0,0,6,0" Content="☰ Table View" Command="{Binding ShowTableCommand}" ToolTip.Tip="Show designs as sortable rows (scrolls left/right on narrow windows)"/>
+          <Button x:Name="HelpButton" Margin="0,0,10,0" Classes="primary" Content="? Help &amp; User Guide" Click="OnOpenHelp"
+                  ToolTip.Tip="Open the built-in User Guide and Wiki (works 100% offline)"/>
+          <TextBlock Text="Theme" VerticalAlignment="Center" Margin="0,0,6,0"/>
+          <ComboBox Width="170" ItemsSource="{Binding ThemeOptions}" SelectedItem="{Binding SelectedTheme}" ToolTip.Tip="Switch between the dark and light studio themes"/>
+        </WrapPanel>
+        <!-- Dedicated status row -->
+        <Grid x:Name="ScanStatusRow" Grid.Row="1" Grid.ColumnSpan="4" ColumnDefinitions="Auto,*,Auto" Margin="0,6,0,0" IsVisible="{Binding IsScanning}">
+          <ProgressBar Grid.Column="0" Width="240" Minimum="0" Maximum="100" Value="{Binding ScanProgress}" Foreground="{DynamicResource StudioAccent}" VerticalAlignment="Center"/>
+          <TextBlock Grid.Column="1" Text="{Binding ScanStatusText}" Classes="muted" VerticalAlignment="Center" Margin="10,0" TextTrimming="CharacterEllipsis"/>
+          <Button Grid.Column="2" Content="✕ Cancel Scan" Command="{Binding CancelScanCommand}" Padding="10,3" ToolTip.Tip="Stop scanning now (Esc). Designs scanned so far are kept."/>
+        </Grid>
       </Grid>
     </Border>
     <Border DockPanel.Dock="Bottom" Padding="8,3" Background="{DynamicResource StudioPanel}"><TextBlock Text="{Binding StatusMessage}" Classes="muted"/></Border>
-    <Grid ColumnDefinitions="276,*,380">
+    <Grid ColumnDefinitions="300,*,380">
       <!-- Left Sidebar -->
       <ScrollViewer Grid.Column="0">
         <StackPanel Margin="10" Spacing="10">
           <Border Classes="card"><StackPanel Spacing="6">
             <TextBlock Classes="h" Text="Watched Pattern Folders (Read-Only)"/>
-            <ListBox ItemsSource="{Binding Folders}" SelectedItem="{Binding SelectedFolder}" MaxHeight="200" Background="Transparent"/>
-            <Grid ColumnDefinitions="*,*">
-              <Button Content="➕ Add Folder" Click="OnAddFolder" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsScanning}"/>
-              <Button Grid.Column="1" Margin="6,0,0,0" Content="➖ Remove Folder" Command="{Binding RemoveFolderCommand}" HorizontalAlignment="Stretch"/>
-            </Grid>
-            <Button Content="🔄 Scan / Refresh All" Command="{Binding RescanAllCommand}" HorizontalAlignment="Stretch" IsEnabled="{Binding !IsScanning}"/>
-            <Button Content="Show all folders" Command="{Binding ClearFolderFilterCommand}" HorizontalAlignment="Stretch"/>
+            <!-- Bounded, scrollable list: many folders never overflow onto the buttons below -->
+            <Border BorderThickness="1" BorderBrush="{DynamicResource StudioBorder}" CornerRadius="6" ClipToBounds="True">
+              <ScrollViewer x:Name="WatchedFoldersScroll" MaxHeight="180" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                <ListBox ItemsSource="{Binding Folders}" SelectedItem="{Binding SelectedFolder}" Background="Transparent"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Disabled">
+                  <ListBox.ItemTemplate><DataTemplate>
+                    <TextBlock Text="{Binding}" ToolTip.Tip="{Binding}" FontSize="12"/>
+                  </DataTemplate></ListBox.ItemTemplate>
+                </ListBox>
+              </ScrollViewer>
+            </Border>
+            <!-- WrapPanel: buttons size to their content and wrap to a new row instead of clipping -->
+            <WrapPanel x:Name="FolderButtons" Orientation="Horizontal">
+              <Button Margin="0,0,6,6" Padding="10,5" Content="➕ Add Folder" Click="OnAddFolder" IsEnabled="{Binding !IsScanning}"
+                      ToolTip.Tip="Add a folder of embroidery designs to watch (read-only: files are never changed)"/>
+              <Button Margin="0,0,6,6" Padding="10,5" Content="➖ Remove Folder" Command="{Binding RemoveFolderCommand}"
+                      ToolTip.Tip="Remove the selected folder from the catalog (your files stay where they are)"/>
+              <Button Margin="0,0,6,6" Padding="10,5" Content="🔄 Scan / Refresh All" Command="{Binding RescanAllCommand}" IsEnabled="{Binding !IsScanning}"
+                      ToolTip.Tip="Re-scan every watched folder for new or changed designs"/>
+              <Button Margin="0,0,6,6" Padding="10,5" Content="Show all folders" Command="{Binding ClearFolderFilterCommand}"
+                      ToolTip.Tip="Clear the folder filter and show designs from every folder"/>
+            </WrapPanel>
+            <CheckBox IsChecked="{Binding AllowCloudDownloads}" FontSize="12"
+                      ToolTip.Tip="Off (recommended): Dropbox/OneDrive online-only files are cataloged by name without downloading them. On: scanning downloads them to read previews.">
+              <TextBlock Text="Allow downloading cloud-only files (Dropbox/OneDrive)" TextWrapping="Wrap"/>
+            </CheckBox>
           </StackPanel></Border>
           <Border Classes="card"><StackPanel Spacing="6">
             <TextBlock Classes="h" Text="Faceted Filters"/>
@@ -64,6 +89,9 @@
             <TextBox Text="{Binding MaxStitchesText}" Watermark="e.g. 20000"/>
             <TextBlock Text="Max Colors" Classes="muted"/>
             <TextBox Text="{Binding MaxColorsText}" Watermark="e.g. 6"/>
+            <CheckBox IsChecked="{Binding HideWorkingFiles}" ToolTip.Tip="Hide Wilcom/Hatch .EMB working files and show only machine-ready stitch-out files (.vp3, .pes, .dst, .jef, .exp, .xxx, .hus, .pec)">
+              <TextBlock Text="Stitch-Out Files Only (Hide .EMB)" TextWrapping="Wrap"/>
+            </CheckBox>
             <Button Content="Reset Filters" Command="{Binding ResetFiltersCommand}" HorizontalAlignment="Stretch"/>
           </StackPanel></Border>
         </StackPanel>
@@ -73,22 +101,31 @@
         <Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto" Margin="6,0,6,8">
           <TextBlock Text="{Binding PatternsFoundText}" FontSize="16" FontWeight="Bold" VerticalAlignment="Center"/>
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8">
-            <Button Content="{Binding TagSelectedLabel}" Click="OnBulkTag"/>
-            <Button Classes="primary" Content="💾 Send to USB" Click="OnSendToUsb"/>
+            <Button Content="↗ Open in Default App" Command="{Binding OpenInDefaultAppCommand}"
+                    ToolTip.Tip="Open the selected design in your embroidery software (for example Wilcom Hatch). Tip: double-click a design."/>
+            <Button Content="{Binding TagSelectedLabel}" Click="OnBulkTag" ToolTip.Tip="Add or remove tags on every checked design (tick checkboxes, or Ctrl/Shift-click)"/>
+            <Button Classes="primary" Content="{Binding SendToUsbLabel}" Click="OnSendToUsb" ToolTip.Tip="Copy the checked designs to a USB stick for your embroidery machine, with a printable thread chart"/>
           </StackPanel>
         </Grid>
         <Panel>
           <!-- Multiple (not Toggle): click selects only that card; Ctrl+Click toggles; Shift+Click selects a range -->
           <ListBox x:Name="GridList" IsVisible="{Binding IsGridView}" ItemsSource="{Binding Patterns}" SelectionMode="Multiple"
-                   SelectedItem="{Binding SelectedPattern}" SelectionChanged="OnGridSelectionChanged">
+                   SelectedItem="{Binding SelectedPattern}" SelectionChanged="OnGridSelectionChanged" DoubleTapped="OnPatternDoubleTapped">
             <ListBox.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ListBox.ItemsPanel>
             <ListBox.ItemTemplate>
               <DataTemplate>
-                <Border Classes="studiocard" Width="218" Height="296" CornerRadius="12" Padding="10">
+                <Border Classes="studiocard" Width="218" Height="296" CornerRadius="12" Padding="10" ToolTip.Tip="{Binding Path_}">
+                  <Border.ContextMenu><ContextMenu>
+                    <MenuItem Header="↗ Open in Default App" Command="{Binding $parent[Window].DataContext.OpenInDefaultAppCommand}" CommandParameter="{Binding}"/>
+                  </ContextMenu></Border.ContextMenu>
                   <DockPanel>
-                    <Border DockPanel.Dock="Top" Background="#2D3748" CornerRadius="8" Height="160">
-                      <Image Source="{Binding Thumbnail}" Width="148" Height="148" Stretch="Uniform"/>
-                    </Border>
+                    <Panel DockPanel.Dock="Top" Height="160">
+                      <Border Background="#2D3748" CornerRadius="8">
+                        <Image Source="{Binding Thumbnail}" Width="148" Height="148" Stretch="Uniform"/>
+                      </Border>
+                      <CheckBox Classes="selectbox" IsChecked="{Binding IsSelected, Mode=OneWay}" Click="OnSelectCheckBoxClick"
+                                HorizontalAlignment="Left" VerticalAlignment="Top" Margin="4" ToolTip.Tip="Select this design (same as Ctrl-click)"/>
+                    </Panel>
                     <ItemsControl DockPanel.Dock="Bottom" ItemsSource="{Binding ThreadDots}" Margin="0,6,0,0">
                       <ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal" Spacing="4"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                       <ItemsControl.ItemTemplate><DataTemplate>
@@ -98,6 +135,7 @@
                     <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Margin="0,6,0,0">
                       <Border Classes="pill emerald" IsVisible="{Binding IsSmallHoop}"><TextBlock Text="{Binding HoopPill}" FontSize="10" FontWeight="SemiBold"/></Border>
                       <Border Classes="pill amber" IsVisible="{Binding IsLargeHoop}"><TextBlock Text="{Binding HoopPill}" FontSize="10" FontWeight="SemiBold"/></Border>
+                      <Border Classes="pill" Background="#334F46E5" IsVisible="{Binding IsSpecialPill}"><TextBlock Text="{Binding HoopPill}" FontSize="10" FontWeight="SemiBold"/></Border>
                       <Border Classes="pill"><TextBlock Text="{Binding FormatBadge, StringFormat='.{0}'}" FontSize="10"/></Border>
                     </StackPanel>
                     <StackPanel Margin="0,8,0,0" Spacing="2">
@@ -110,20 +148,26 @@
             </ListBox.ItemTemplate>
           </ListBox>
           <DataGrid x:Name="TableGrid" IsVisible="{Binding !IsGridView}" ItemsSource="{Binding Patterns}" SelectionMode="Extended"
-                    SelectionChanged="OnTableSelectionChanged" IsReadOnly="True" CanUserSortColumns="True" RowHeight="54">
+                    SelectionChanged="OnTableSelectionChanged" DoubleTapped="OnPatternDoubleTapped" IsReadOnly="True" CanUserSortColumns="True" RowHeight="54"
+                    HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" FrozenColumnCount="1">
             <DataGrid.Columns>
+              <DataGridTemplateColumn Header="✓" Width="40">
+                <DataGridTemplateColumn.CellTemplate><DataTemplate>
+                  <CheckBox IsChecked="{Binding IsSelected, Mode=OneWay}" Click="OnSelectCheckBoxClick" HorizontalAlignment="Center" ToolTip.Tip="Select this design"/>
+                </DataTemplate></DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
               <DataGridTemplateColumn Header="" Width="60">
                 <DataGridTemplateColumn.CellTemplate><DataTemplate>
                   <Border Background="#2D3748" CornerRadius="4" Width="48" Height="48"><Image Source="{Binding Thumbnail}" Stretch="Uniform"/></Border>
                 </DataTemplate></DataGridTemplateColumn.CellTemplate>
               </DataGridTemplateColumn>
-              <DataGridTextColumn Header="Title / Subject" Binding="{Binding Title}" Width="2*"/>
-              <DataGridTextColumn Header="Filename" Binding="{Binding FileName}" Width="1.5*"/>
+              <DataGridTextColumn Header="Title / Subject" Binding="{Binding Title}" Width="240"/>
+              <DataGridTextColumn Header="Filename" Binding="{Binding FileName}" Width="220"/>
               <DataGridTextColumn Header="Format" Binding="{Binding FormatBadge}" Width="70"/>
-              <DataGridTextColumn Header="Dimensions (mm / in)" Binding="{Binding SizeBothText}" Width="1.6*"/>
+              <DataGridTextColumn Header="Dimensions (mm / in)" Binding="{Binding SizeBothText}" Width="230"/>
               <DataGridTextColumn Header="Stitches" Binding="{Binding StitchCount}" Width="90"/>
               <DataGridTextColumn Header="Colors" Binding="{Binding ColorCount}" Width="70"/>
-              <DataGridTextColumn Header="Smallest Brother Hoop" Binding="{Binding HoopCategory}" Width="1.4*"/>
+              <DataGridTextColumn Header="Smallest Brother Hoop" Binding="{Binding HoopCategoryDisplay}" Width="210"/>
             </DataGrid.Columns>
           </DataGrid>
         </Panel>
@@ -134,7 +178,7 @@
           <Border Classes="card"><StackPanel Spacing="6">
             <Grid ColumnDefinitions="*,Auto">
               <TextBlock Classes="h" Text="Stitch Preview" VerticalAlignment="Center"/>
-              <ComboBox Grid.Column="1" Width="190" ItemsSource="{Binding PreviewBackgroundOptions}" SelectedItem="{Binding SelectedPreviewBackground}" ToolTip.Tip="Preview Canvas"/>
+              <ComboBox Grid.Column="1" Width="190" ItemsSource="{Binding PreviewBackgroundOptions}" SelectedItem="{Binding SelectedPreviewBackground}" ToolTip.Tip="Stitch Preview Background: change the fabric color behind the preview (your file is not changed)"/>
             </Grid>
             <Border Background="{Binding PreviewBackgroundHex}" CornerRadius="8" Height="272">
               <Image Source="{Binding SelectedPattern.Thumbnail}" Width="256" Height="256" Stretch="Uniform"/>
@@ -156,7 +200,10 @@
               <Border Grid.Row="2" Grid.Column="1" Classes="badge"><TextBlock Text="{Binding SmartStatus, StringFormat='Smart Search: {0}'}" TextWrapping="Wrap" FontSize="11"/></Border>
             </Grid>
           </StackPanel></Border>
-          <Button Classes="primary" Content="💾 Send to USB Drive" Click="OnSendToUsb" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Height="40"/>
+          <Button Classes="primary" Content="💾 Send to USB Drive" Click="OnSendToUsb" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Height="40"
+                  ToolTip.Tip="Copy the selected design(s) to a USB stick for your embroidery machine"/>
+          <Button Content="↗ Open in Default App (e.g. Wilcom Hatch)" Command="{Binding OpenInDefaultAppCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                  ToolTip.Tip="Open this design in the program Windows uses for its file type"/>
           <Border Classes="card"><StackPanel Spacing="6">
             <TextBlock Classes="h" Text="User Notes &amp; Custom Tags"/>
             <ItemsControl ItemsSource="{Binding SelectedPattern.Tags}">

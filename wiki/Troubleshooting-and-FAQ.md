@@ -34,3 +34,12 @@ No. Everything, including Smart Search, works offline.
 Open **Start → Settings → Apps**, find **Stitchidex (.NET)**, and click **Uninstall**.
 
 Happy stitching! 🧵
+
+## My PC slowed down while scanning a Dropbox folder
+Stitchidex 0.5.1 and later never download Dropbox/OneDrive online-only files unless you tick **Allow downloading cloud-only files (Dropbox/OneDrive)**. Those files show **Cloud Only (Not Downloaded)**. Click **Cancel Scan** or press `Esc` to stop any scan. See Watched Folders & Cloud Safety.
+
+## Why do my .emb files show "Source (.EMB)"?
+`.emb` files are Wilcom Hatch working files, not machine stitch-out files. Tick **Stitch-Out Files Only (Hide .EMB)** to hide them. See .EMB Working Files vs Stitch-Out Formats.
+
+## Double-clicking a design says no program is set
+Windows does not know which program opens that file type. Right-click the file in Explorer, choose **Open with → Choose another app**, pick your embroidery software and tick **Always use this app**.

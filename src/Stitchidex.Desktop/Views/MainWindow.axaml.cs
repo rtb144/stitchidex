@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
+using Avalonia.VisualTree;
 using Stitchidex.Desktop.ViewModels;
 namespace Stitchidex.Desktop.Views;
 
@@ -63,9 +64,31 @@ public partial class MainWindow : Window
 
     void SyncSelection(System.Collections.IList items)
     {
-        Vm.SelectedPatterns.Clear();
-        foreach (var i in items.OfType<PatternItemViewModel>()) Vm.SelectedPatterns.Add(i);
+        Vm.Selection.Reset(items.OfType<PatternItemViewModel>());
     }
+
+    /// <summary>Card / row checkbox: toggles that design in the active list's multi-selection (same as Ctrl-click).</summary>
+    void OnSelectCheckBoxClick(object? s, RoutedEventArgs e)
+    {
+        if (s is not CheckBox { DataContext: PatternItemViewModel p } cb) return;
+        System.Collections.IList? sel = Vm.IsGridView ? GridList.SelectedItems : TableGrid.SelectedItems;
+        if (sel == null) return;
+        bool want = !Vm.Selection.IsSelected(p);
+        // A lone "current" item selected by a plain click counts as unchecked-then-checked: keep it and add p.
+        if (want) { if (!sel.Contains(p)) sel.Add(p); }
+        else sel.Remove(p);
+        cb.SetCurrentValue(Avalonia.Controls.Primitives.ToggleButton.IsCheckedProperty, Vm.Selection.IsSelected(p));
+        e.Handled = true;
+    }
+
+    void OnPatternDoubleTapped(object? s, TappedEventArgs e)
+    {
+        if (e.Source is Avalonia.Visual v && v.FindAncestorOfType<CheckBox>(true) != null) return;
+        var p = (e.Source as Control)?.DataContext as PatternItemViewModel ?? Vm.SelectedPattern;
+        if (p != null) Vm.OpenInDefaultAppCommand.Execute(p);
+    }
+
+    void OnOpenHelp(object? s, RoutedEventArgs e) => new HelpWindow().Show(this);
     void OnGridSelectionChanged(object? s, SelectionChangedEventArgs e) => SyncSelection(GridList.SelectedItems!);
     void OnTableSelectionChanged(object? s, SelectionChangedEventArgs e)
     {

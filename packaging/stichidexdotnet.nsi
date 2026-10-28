@@ -1,4 +1,4 @@
-; NSIS installer (buildable on Linux with makensis). Usage: makensis -DVERSION=0.5.0 -DSRC=artifacts/win-x64 -DOUTFILE=Setup.exe
+; NSIS installer (buildable on Linux with makensis). Usage: makensis -DVERSION=0.5.1 -DSRC=artifacts/win-x64 -DOUTFILE=Setup.exe
 Unicode true
 SetCompressor /SOLID lzma
 Name "Stitchidex (.NET) ${VERSION}"
