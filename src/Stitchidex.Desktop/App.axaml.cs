@@ -19,6 +19,8 @@ public partial class App : Application
             if (Environment.GetEnvironmentVariable("STITCHIDEX_THEME") is { Length: > 0 } t) vm.SelectedTheme = t;
             if (Environment.GetEnvironmentVariable("STITCHIDEX_SEARCH") is { Length: > 0 } q)
                 Avalonia.Threading.DispatcherTimer.RunOnce(() => vm.SearchText = q, TimeSpan.FromSeconds(4));
+            if (Environment.GetEnvironmentVariable("STITCHIDEX_HELP") is { Length: > 0 } h)
+                d.MainWindow.Opened += (_, _) => new Views.HelpWindow(h).Show(d.MainWindow);
         }
         base.OnFrameworkInitializationCompleted();
     }

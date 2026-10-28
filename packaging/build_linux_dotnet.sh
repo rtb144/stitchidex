@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds a self-contained linux-x64 Stitchidex .NET package (stichidexdotnet) that installs cleanly alongside the Python stichidex package.
 set -euo pipefail
-VERSION="${VERSION:-0.5.0}"
+VERSION="${VERSION:-0.5.1}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/artifacts/linux-x64"
 

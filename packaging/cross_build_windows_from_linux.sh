@@ -2,7 +2,7 @@
 # Cross-compiles self-contained Windows x64 stichidexdotnet.exe directly on Linux (z8g4)
 # and copies it into ~/stichidex/packaging/windows_vm/shared with Windows CRLF batch launcher.
 set -euo pipefail
-VERSION="${VERSION:-0.5.0}"
+VERSION="${VERSION:-0.5.1}"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="$ROOT/artifacts/win-x64"
 VM_SHARED="${VM_SHARED:-$HOME/stichidex/packaging/windows_vm/shared}"
@@ -67,6 +67,7 @@ Source: "C:\StichidexDotNet\stitchidex.ico"; DestDir: "{app}"; Flags: ignorevers
 Source: "C:\StichidexDotNet\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\StichidexDotNet\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\StichidexDotNet\models\*"; DestDir: "{app}\models"; Flags: recursesubdirs ignoreversion
+Source: "C:\StichidexDotNet\help\*"; DestDir: "{app}\help"; Flags: recursesubdirs ignoreversion
 Source: "C:\StichidexDotNet\samples\*"; DestDir: "{app}\samples"; Flags: recursesubdirs ignoreversion skipifsourcedoesntexist
 
 [Icons]

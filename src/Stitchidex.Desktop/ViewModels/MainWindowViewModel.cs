@@ -22,21 +22,27 @@ public partial class PatternItemViewModel : ObservableObject
     public string StitchBadge => $"{Entry.StitchCount:N0} st";
     public string SizeText => $"{Entry.WidthMm:0.#} × {Entry.HeightMm:0.#} mm";
     public string SizeInText => $"{Entry.WidthMm / 25.4:0.00} × {Entry.HeightMm / 25.4:0.00} in";
-    public string CardSubtitle => $"{Entry.WidthMm:0}×{Entry.HeightMm:0} mm • {Entry.StitchCount:N0} sts";
-    public string HoopPill => HoopShort(Entry.HoopCategory);
-    public bool IsSmallHoop => Entry.HoopCategory.StartsWith("100x100");
-    public bool IsLargeHoop => !IsSmallHoop;
+    public bool IsCloudOnly => Entry.HoopCategory == CloudPlaceholderDetector.CloudOnlyBadge;
+    public bool IsWorkingFile => PatternFormats.IsWorkingFile(Entry.Path);
+    public string CardSubtitle => IsCloudOnly ? "☁ " + CloudPlaceholderDetector.CloudOnlyBadge
+        : IsWorkingFile && Entry.StitchCount == 0 ? "Hatch/Wilcom Source Design"
+        : $"{Entry.WidthMm:0}×{Entry.HeightMm:0} mm • {Entry.StitchCount:N0} sts";
+    public string HoopPill => IsCloudOnly ? "☁ Cloud Only" : HoopShort(PatternFormats.HoopBadge(Entry.Path, Entry.HoopCategory));
+    public bool IsSpecialPill => IsCloudOnly || IsWorkingFile && Entry.StitchCount == 0;
+    public bool IsSmallHoop => !IsSpecialPill && Entry.HoopCategory.StartsWith("100x100");
+    public bool IsLargeHoop => !IsSpecialPill && !IsSmallHoop;
+    public string HoopCategoryDisplay => PatternFormats.HoopBadge(Entry.Path, Entry.HoopCategory);
     public string FileName => Path.GetFileName(Entry.Path);
     public int ColorCount => Entry.ColorCount;
     public string ColorsFormatBadge => $"{Entry.ColorCount} colors • .{FormatBadge}";
     public string JumpsTrimsBadge => $"{Entry.JumpCount:N0} jumps / {Entry.TrimCount:N0} trims";
     public string SizeBothText => $"{SizeText} ({SizeInText})";
-    public string HoopFitBadge => $"Hoop fit: {Entry.HoopCategory}";
+    public string HoopFitBadge => $"Hoop fit: {HoopCategoryDisplay}";
     public IReadOnlyList<string> ThreadDots => Entry.PaletteHex.Take(8).ToList();
     static string HoopShort(string h)
     {
         var i = h.IndexOf('(');
-        return i >= 0 && h.EndsWith(")") ? h[(i + 1)..^1] : h;
+        return i > 0 && h.EndsWith(")") && !h.StartsWith("Source") ? h[(i + 1)..^1] : h;
     }
     public string Path_ => Entry.Path;
     public IReadOnlyList<string> Tags => Entry.Tags;
@@ -47,6 +53,8 @@ public partial class PatternItemViewModel : ObservableObject
     public IReadOnlyList<ThreadColor> Palette => _palette ??= LoadPalette();
     IReadOnlyList<ThreadColor> LoadPalette()
     {
+        // Never open cloud-only placeholders (would trigger a Dropbox/OneDrive download).
+        if (!IsCloudOnly && !CloudPlaceholderDetector.IsCloudPlaceholder(Entry.Path))
         try
         {
             var colors = EmbroideryParserRegistry.ParseFile(Entry.Path).Colors;
@@ -82,7 +90,8 @@ public partial class MainWindowViewModel : ObservableObject
     public ObservableCollection<string> FormatFamilies { get; } = new() { AllOption };
     public ObservableCollection<string> HoopCategories { get; } = new() { AllOption };
     public ObservableCollection<string> CraftTags { get; } = new() { AllOption };
-    public ObservableCollection<PatternItemViewModel> SelectedPatterns { get; } = new();
+    /// <summary>Checkbox + Ctrl/Shift-click selection shared by grid cards and table rows.</summary>
+    public PatternSelectionModel<PatternItemViewModel> Selection { get; } = new();
     public IReadOnlyList<string> ThemeOptions => Themes;
 
     [ObservableProperty] string _searchText = "";
@@ -94,14 +103,32 @@ public partial class MainWindowViewModel : ObservableObject
     [ObservableProperty] string _selectedHoop = AllOption;
     [ObservableProperty] string _selectedCraftTag = AllOption;
     CancellationTokenSource? _scanCts;
-    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSelection))] [NotifyPropertyChangedFor(nameof(TagSelectedLabel))] PatternItemViewModel? _selectedPattern;
+    [ObservableProperty] [NotifyPropertyChangedFor(nameof(HasSelection))] [NotifyPropertyChangedFor(nameof(TagSelectedLabel))] [NotifyPropertyChangedFor(nameof(SendToUsbLabel))] PatternItemViewModel? _selectedPattern;
     [ObservableProperty] string _newTagText = "";
     [ObservableProperty] string _notesText = "";
     [ObservableProperty] string _statusMessage = "Ready";
 
     public string SmartStatus => _smart.Status;
     public bool HasSelection => SelectedPattern != null;
-    public string TagSelectedLabel => $"🏷️ Tag Selected ({EffectiveSelection().Count})";
+    public string TagSelectedLabel => PatternSelectionModel<PatternItemViewModel>.TagLabel(EffectiveSelection().Count);
+    public string SendToUsbLabel => PatternSelectionModel<PatternItemViewModel>.UsbLabel(EffectiveSelection().Count);
+    [ObservableProperty] bool _hideWorkingFiles;
+    [ObservableProperty] bool _allowCloudDownloads;
+    partial void OnHideWorkingFilesChanged(bool value) => Reload();
+    partial void OnAllowCloudDownloadsChanged(bool value)
+    {
+        _catalog.SkipCloudPlaceholders = !value;
+        StatusMessage = value ? "Cloud downloads allowed: the next scan may download Dropbox/OneDrive online-only files."
+                              : "Cloud-Safe Mode: online-only Dropbox/OneDrive files are not downloaded.";
+    }
+
+    [RelayCommand]
+    void OpenInDefaultApp(PatternItemViewModel? p)
+    {
+        p ??= SelectedPattern;
+        var err = DefaultAppLauncher.OpenInDefaultApp(p?.Path_);
+        StatusMessage = err ?? $"Opened {p!.FileName} in its default embroidery program";
+    }
     public SqliteCatalogService Catalog => _catalog;
 
     public static string DefaultDatabasePath()
@@ -117,7 +144,11 @@ public partial class MainWindowViewModel : ObservableObject
         _catalog.RepairTruncatedTitles();
         _catalog.BackfillSemanticCards();
         _smart = new HybridSmartSearchService(_catalog, BlendedEmbeddingProvider.CreateDefault());
-        SelectedPatterns.CollectionChanged += (_, _) => OnPropertyChanged(nameof(TagSelectedLabel));
+        Selection.Changed += () =>
+        {
+            foreach (var p in Patterns) p.IsSelected = Selection.IsSelected(p);
+            OnPropertyChanged(nameof(TagSelectedLabel)); OnPropertyChanged(nameof(SendToUsbLabel));
+        };
         foreach (var f in _catalog.All().Select(e => Path.GetDirectoryName(e.Path) ?? "").Distinct().OrderBy(x => x)) Folders.Add(f);
         Reload();
         _ = RepairThumbnailsAsync();
@@ -144,7 +175,7 @@ public partial class MainWindowViewModel : ObservableObject
     void ResetFilters()
     {
         SelectedFormat = AllOption; SelectedHoop = AllOption; SelectedCraftTag = AllOption;
-        MaxStitchesText = ""; MaxColorsText = ""; SelectedFolder = null; SearchText = "";
+        MaxStitchesText = ""; MaxColorsText = ""; SelectedFolder = null; SearchText = ""; HideWorkingFiles = false;
     }
 
     IProgress<(int Done, int Total, string FileName)> MakeProgress(string verb) =>
@@ -170,7 +201,8 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     async Task RescanAll()
     {
-        foreach (var f in Folders.ToList()) await AddFolderAsync(f);
+        foreach (var f in Folders.ToList())
+            if (!await AddFolderAsync(f)) break; // Cancel Scan stops the whole refresh
     }
 
     partial void OnSearchTextChanged(string value) => Reload(debounceMs: 150);
@@ -250,7 +282,7 @@ public partial class MainWindowViewModel : ObservableObject
         }
         var ct = cts.Token;
         var q = SearchText; var smart = SmartSearchEnabled; var folder = SelectedFolder; var fmt = SelectedFormat;
-        var hoop = SelectedHoop; var craft = SelectedCraftTag; var msT = MaxStitchesText; var mcT = MaxColorsText;
+        var hoop = SelectedHoop; var craft = SelectedCraftTag; var msT = MaxStitchesText; var mcT = MaxColorsText; var hideWork = HideWorkingFiles;
         try
         {
             if (debounceMs > 0) await Task.Delay(debounceMs, ct);
@@ -261,6 +293,7 @@ public partial class MainWindowViewModel : ObservableObject
                 IEnumerable<CatalogEntry> items = string.IsNullOrWhiteSpace(q) ? all
                     : smart ? _smart.Search(q, 5000, ct).Select(r => r.Entry)
                     : _catalog.FullTextSearch(q, 5000).Select(h => h.Id).ToHashSet() is var ids ? all.Where(e => ids.Contains(e.Id)) : all;
+                items = PatternFormats.ApplyStitchOutOnly(items, hideWork);
                 if (folder != null) items = items.Where(e => e.Path.StartsWith(folder, StringComparison.Ordinal));
                 if (fmt != AllOption) items = items.Where(e => e.FormatFamily == fmt);
                 if (hoop != AllOption) items = items.Where(e => e.HoopCategory == hoop);
@@ -301,7 +334,8 @@ public partial class MainWindowViewModel : ObservableObject
     [RelayCommand]
     void CancelScan() => _scanCts?.Cancel();
 
-    public async Task AddFolderAsync(string path)
+    /// <summary>Returns false when the scan was canceled.</summary>
+    public async Task<bool> AddFolderAsync(string path)
     {
         if (!Folders.Contains(path)) Folders.Add(path);
         _scanCts?.Dispose();
@@ -310,12 +344,14 @@ public partial class MainWindowViewModel : ObservableObject
         try
         {
             var n = await _catalog.ScanDirectoryAsync(path, MakeProgress("Indexing"), _scanCts.Token);
-            StatusMessage = $"Indexed {n:N0} patterns from {path}";
+            var cloud = _catalog.CloudPlaceholdersSkipped;
+            StatusMessage = $"Indexed {n:N0} patterns from {path}" + (cloud > 0 ? $" — {cloud:N0} Dropbox/OneDrive online-only file(s) cataloged without downloading" : "");
         }
-        catch (OperationCanceledException) { StatusMessage = $"Scan canceled for {path}"; }
+        catch (OperationCanceledException) { StatusMessage = $"Scan canceled for {path}"; IsScanning = false; ScanStatusText = ""; Reload(); return false; }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { StatusMessage = "Scan failed: " + ex.Message; }
         finally { IsScanning = false; ScanStatusText = ""; }
         Reload();
+        return true;
     }
 
     [RelayCommand]
@@ -364,7 +400,7 @@ public partial class MainWindowViewModel : ObservableObject
     }
 
     public IReadOnlyList<PatternItemViewModel> EffectiveSelection() =>
-        SelectedPatterns.Count > 0 ? SelectedPatterns.ToList() : SelectedPattern != null ? new[] { SelectedPattern } : Array.Empty<PatternItemViewModel>();
+        Selection.Count > 0 ? Selection.Items.ToList() : SelectedPattern != null ? new[] { SelectedPattern } : Array.Empty<PatternItemViewModel>();
 
     public void ApplyBulkTags(IEnumerable<string> add, IEnumerable<string> remove)
     {

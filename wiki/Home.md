@@ -22,10 +22,19 @@ It works with the files your machine uses, including:
 Everything happens on your own computer. You don't need internet or an account, and nothing is uploaded.
 
 ## Guides
+- [[Quick Start|Quick-Start]]
+- [[Portable .zip Guide|Portable-Zip-Guide]]
+- [[Watched Folders & Dropbox/Cloud Safety|Watched-Folders-and-Cloud-Safety]]
+- [[Search & Faceted Filtering|Search-and-Faceted-Filtering]]
+- [[.EMB Working Files vs Stitch-Out Formats|EMB-Working-Files-vs-Stitch-Out-Formats]]
+- [[Selection & Tagging|Selection-and-Tagging]]
+- [[Table View & Preview Background|Table-View-and-Preview-Background]]
 - [[Installing on Windows 10 & 11|Windows-10-and-11-Installation-Guide]]
 - [[Searching, Tagging & Organizing|Searching-Tagging-and-Organizing-Patterns]]
 - [[Sending Patterns to Your USB Stick|Sending-Patterns-to-Your-USB-Stick]]
 - [[Troubleshooting & FAQ|Troubleshooting-and-FAQ]]
+
+Tip: everything in this wiki is built into the app. Click **? Help & User Guide** in the top bar to read it offline.
 
 ## Download
 Get the latest installer from the [Releases page](https://github.com/rtb144/stitchidex/releases/latest).

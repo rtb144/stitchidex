@@ -669,7 +669,7 @@ public static class EmbroideryParserRegistry
         [".sew"] = "Janome / New Home (.sew)", [".xxx"] = "Singer / Compucon (.xxx)",
         [".u01"] = "Barudan Industrial (.u01)", [".dsb"] = "Barudan / Tajima (.dsb)", [".dsz"] = "ZSK / Tajima (.dsz)",
         [".tap"] = "Happy Industrial (.tap)", [".ksm"] = "Pfaff / Bernina KSM (.ksm)", [".csd"] = "Poem / Huskygram / Singer (.csd)",
-        [".emb"] = "Wilcom Embroidery Studio OLE2 (.emb)", [".des"] = "Bernina Artista / Melco Design (.des)",
+        [".emb"] = Stitchidex.Core.Services.PatternFormats.EmbFamily, [".des"] = "Bernina Artista / Melco Design (.des)",
     };
 
     static readonly IEmbroideryParser[] Parsers =
@@ -694,6 +694,8 @@ public static class EmbroideryParserRegistry
         using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
         var p = parser!.Parse(fs, path);
         p.FilePath = path;
+        if (Stitchidex.Core.Services.PatternFormats.IsWorkingFile(path) && p.StitchCount == 0)
+            p.HoopCategory = Stitchidex.Core.Services.PatternFormats.SourceEmbBadge; // Wilcom/Hatch working design, not "Unknown"
         return p;
     }
 }
