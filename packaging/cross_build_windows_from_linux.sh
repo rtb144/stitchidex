@@ -67,6 +67,7 @@ Source: "C:\StichidexDotNet\stitchidex.ico"; DestDir: "{app}"; Flags: ignorevers
 Source: "C:\StichidexDotNet\LICENSE.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\StichidexDotNet\THIRD-PARTY-NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\StichidexDotNet\models\*"; DestDir: "{app}\models"; Flags: recursesubdirs ignoreversion
+Source: "C:\StichidexDotNet\help\*"; DestDir: "{app}\help"; Flags: recursesubdirs ignoreversion
 Source: "C:\StichidexDotNet\samples\*"; DestDir: "{app}\samples"; Flags: recursesubdirs ignoreversion skipifsourcedoesntexist
 
 [Icons]
